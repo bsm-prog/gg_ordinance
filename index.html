@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>경기도의회 입법분석 지원 시스템</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:#f5f6fa;color:#222;}
+
+/* ── 공통 ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
+.loader{border:3px solid #e5e7eb;border-top-color:#1B4F9E;border-radius:50%;width:18px;height:18px;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.sk{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:sk 1.3s infinite;border-radius:4px;}
+@keyframes sk{to{background-position:-200% 0;}}
+
+/* ── 상단 헤더 ── */
+.site-header{background:linear-gradient(135deg,#0d2550 0%,#1B4F9E 100%);color:#fff;padding:0 1.5rem;}
+.site-header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;}
+.site-logo{display:flex;align-items:center;gap:.6rem;}
+.site-logo-badge{width:30px;height:30px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.35);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;}
+.site-logo-text{font-size:1rem;font-weight:700;letter-spacing:-.02em;}
+.site-logo-sub{font-size:.7rem;color:rgba(255,255,255,.65);font-weight:400;margin-top:1px;}
+
+/* ── 배너 탭 영역 ── */
+.banner-wrap{background:#fff;border-bottom:2px solid #e8edf5;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.banner-inner{max-width:1200px;margin:0 auto;padding:1.25rem 1.5rem;}
+.banner-title{font-size:.72rem;color:#6b7280;font-weight:600;letter-spacing:.08em;margin-bottom:.75rem;}
+.banner-grid{display:flex;gap:.75rem;}
+.banner-btn{background:#fff;border:1.5px solid #e2e8f0;border-radius:.85rem;padding:.9rem 1rem;text-align:left;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.banner-btn:hover{border-color:#1B4F9E;box-shadow:0 4px 16px rgba(27,79,158,.15);transform:translateY(-2px);}
+.banner-btn.active{border-color:#1B4F9E;background:linear-gradient(135deg,#eff6ff,#dbeafe);box-shadow:0 4px 16px rgba(27,79,158,.18);}
+.banner-btn .b-icon{font-size:1.4rem;margin-bottom:.45rem;display:block;}
+.banner-btn .b-title{font-size:.82rem;font-weight:700;color:#1e293b;line-height:1.3;}
+.banner-btn .b-sub{font-size:.68rem;color:#64748b;margin-top:.25rem;line-height:1.5;}
+.banner-btn .b-arrow{position:absolute;right:.7rem;bottom:.7rem;font-size:.65rem;color:#94a3b8;font-weight:700;}
+.banner-btn.active .b-arrow{color:#1B4F9E;}
+.banner-btn .b-line{position:absolute;top:0;left:0;right:0;height:3px;border-radius:.85rem .85rem 0 0;background:#1B4F9E;opacity:0;transition:opacity .18s;}
+.banner-btn.active .b-line,.banner-btn:hover .b-line{opacity:1;}
+
+/* ── 탑 바 (검색) ── */
+.search-bar-wrap{background:#f8fafc;border-bottom:1px solid #e8edf5;padding:.75rem 1.5rem;}
+.search-bar-inner{max-width:1200px;margin:0 auto;display:flex;gap:.6rem;align-items:center;}
+.search-bar-inner input{flex:1;border:1.5px solid #d1d5db;border-radius:.6rem;padding:.55rem 1rem;font-size:.85rem;outline:none;font-family:inherit;}
+.search-bar-inner input:focus{border-color:#1B4F9E;}
+.search-bar-inner select{border:1.5px solid #d1d5db;border-radius:.6rem;padding:.55rem .8rem;font-size:.82rem;background:#fff;outline:none;font-family:inherit;cursor:pointer;}
+.search-bar-inner select:focus{border-color:#1B4F9E;}
+.btn-primary{background:#1B4F9E;color:#fff;border:none;border-radius:.6rem;padding:.55rem 1.25rem;font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;font-family:inherit;transition:background .15s;}
+.btn-primary:hover{background:#163f82;}
+.btn-outline{background:#fff;color:#1B4F9E;border:1.5px solid #1B4F9E;border-radius:.6rem;padding:.45rem 1rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-outline:hover{background:#eff6ff;}
+
+/* ── 메인 콘텐츠 ── */
+.main-wrap{max-width:1200px;margin:0 auto;padding:1.5rem;}
+
+/* ── 섹션 타이틀 ── */
+.sec-title{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;}
+.sec-title-bar{width:4px;height:1.2em;border-radius:3px;background:#1B4F9E;flex-shrink:0;}
+.sec-title h2,.sec-title h3{font-size:.95rem;font-weight:800;color:#0f172a;}
+.sec-title .sec-badge{font-size:.68rem;font-weight:700;padding:.2rem .6rem;border-radius:999px;background:#eff6ff;color:#1B4F9E;border:1px solid #bfdbfe;}
+
+/* ── 화이트 카드 ── */
+.card{background:#fff;border:1px solid #e8edf5;border-radius:.9rem;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.card-pad{padding:1.25rem;}
+
+/* ── 필터 바 ── */
+.filter-bar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end;}
+.filter-group label{display:block;font-size:.68rem;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:.35rem;}
+.filter-group select{border:1.5px solid #e2e8f0;border-radius:.55rem;padding:.45rem .7rem;font-size:.78rem;background:#f8fafc;outline:none;font-family:inherit;cursor:pointer;}
+.filter-group select:focus{border-color:#1B4F9E;background:#fff;}
+.pill-group{display:flex;gap:.35rem;flex-wrap:wrap;}
+.pill{padding:.38rem .85rem;border-radius:999px;border:1.5px solid #e2e8f0;font-size:.75rem;font-weight:600;cursor:pointer;background:#fff;color:#64748b;transition:all .15s;font-family:inherit;}
+.pill:hover{border-color:#93c5fd;color:#1d4ed8;}
+.pill.on{background:#1B4F9E;color:#fff;border-color:#1B4F9E;box-shadow:0 2px 8px rgba(27,79,158,.25);}
+.pill.on-green{background:#16a34a;color:#fff;border-color:#16a34a;}
+.pill.on-yellow{background:#ca8a04;color:#fff;border-color:#ca8a04;}
+.pill.on-red{background:#dc2626;color:#fff;border-color:#dc2626;}
+
+/* ── 통계 ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem;}
+.stat-item{background:#fff;border:1px solid #e8edf5;border-radius:.75rem;padding:1rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.stat-item .s-label{font-size:.68rem;font-weight:700;letter-spacing:.06em;margin-bottom:.35rem;}
+.stat-item .s-num{font-size:1.65rem;font-weight:900;line-height:1;margin-bottom:.25rem;}
+.stat-item .s-unit{font-size:.68rem;}
+.stat-item.total .s-label{color:#64748b;}.stat-item.total .s-num{color:#0f172a;}
+.stat-item.enact{border-top:3px solid #16a34a;}.stat-item.enact .s-label{color:#15803d;}.stat-item.enact .s-num{color:#14532d;}
+.stat-item.amend{border-top:3px solid #ca8a04;}.stat-item.amend .s-label{color:#a16207;}.stat-item.amend .s-num{color:#713f12;}
+.stat-item.abolish{border-top:3px solid #dc2626;}.stat-item.abolish .s-label{color:#b91c1c;}.stat-item.abolish .s-num{color:#7f1d1d;}
+
+/* ── 카테고리 그리드 ── */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.5rem;}
+.cat-card{background:#fff;border:1px solid #e8edf5;border-radius:.75rem;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .18s,transform .18s;}
+.cat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-2px);}
+.cat-head{display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-bottom:1px solid #f1f5f9;}
+.cat-head .c-icon{font-size:1rem;}
+.cat-head .c-label{font-size:.75rem;font-weight:700;}
+.cat-head .c-count{font-size:.7rem;font-weight:800;padding:.15rem .5rem;border-radius:999px;color:#fff;}
+.cat-body{padding:.55rem .8rem;}
+.cat-item{padding:.3rem 0;border-bottom:1px solid #f8fafc;display:flex;flex-direction:column;gap:.15rem;}
+.cat-item:last-child{border-bottom:none;}
+.cat-item-name{font-size:.72rem;color:#1e293b;line-height:1.3;cursor:pointer;}
+.cat-item-name:hover{color:#1B4F9E;text-decoration:underline;}
+.cat-item-meta{display:flex;align-items:center;gap:.4rem;}
+.cat-item-rgn{font-size:.62rem;color:#94a3b8;}
+.cat-item-date{font-size:.62rem;color:#cbd5e1;}
+.cat-new{font-size:.58rem;background:#ef4444;color:#fff;padding:.05rem .3rem;border-radius:3px;}
+.cat-footer{padding:.5rem .8rem;background:#f8fafc;text-align:center;}
+.cat-more{font-size:.7rem;font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit;}
+.cat-expanded{border-top:1px solid #f1f5f9;padding:.55rem .8rem;background:#fafbfd;max-height:340px;overflow-y:auto;}
+
+/* ── 조례 카드 (타임라인) ── */
+.ord-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;}
+.ord-card{background:#fff;border:1px solid #e8edf5;border-radius:.75rem;padding:.9rem;cursor:pointer;transition:all .18s;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.ord-card:hover{border-color:#93c5fd;box-shadow:0 4px 16px rgba(27,79,158,.12);transform:translateY(-2px);}
+.ord-card-meta{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.5rem;}
+.ord-card-name{font-size:.78rem;font-weight:600;color:#1e293b;line-height:1.4;margin-bottom:.4rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ord-card-info{font-size:.68rem;color:#94a3b8;}
+.badge{display:inline-flex;align-items:center;font-size:.65rem;font-weight:700;padding:.15rem .5rem;border-radius:4px;}
+.badge-rgn{background:#eff6ff;color:#1d4ed8;}
+.badge-enact{background:#dcfce7;color:#15803d;}
+.badge-amend{background:#fef9c3;color:#a16207;}
+.badge-abolish{background:#fee2e2;color:#b91c1c;}
+.badge-full{background:#fed7aa;color:#9a3412;}
+.badge-new{background:#ef4444;color:#fff;}
+
+/* ── 도구 탭 ── */
+.tool-tabs{display:flex;border-bottom:2px solid #e8edf5;margin-bottom:1.25rem;}
+.tool-tab{padding:.65rem 1.25rem;font-size:.82rem;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;background:none;border-left:none;border-right:none;border-top:none;font-family:inherit;transition:all .18s;}
+.tool-tab:hover{color:#1B4F9E;}
+.tool-tab.on{color:#1B4F9E;border-bottom-color:#1B4F9E;}
+
+/* ── 테이블 ── */
+.data-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+.data-table th{background:#1B4F9E;color:#fff;padding:.55rem .8rem;text-align:left;font-weight:600;font-size:.75rem;}
+.data-table td{padding:.5rem .8rem;border-bottom:1px solid #f1f5f9;color:#374151;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:#f8fafc;}
+.data-table tr.gg td{background:#fffbeb;}
+.pct-green{color:#15803d;font-weight:700;}
+
+/* ── 모달 ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-box{background:#fff;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:720px;max-height:85vh;display:flex;flex-direction:column;}
+.modal-head{padding:.9rem 1.25rem;border-bottom:1px solid #e8edf5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-head h3{font-size:.88rem;font-weight:700;color:#0f172a;}
+.modal-body{overflow-y:auto;padding:1.25rem;font-size:.82rem;line-height:1.8;color:#374151;}
+.modal-close{background:none;border:none;font-size:1.2rem;color:#94a3b8;cursor:pointer;padding:.2rem .5rem;border-radius:.4rem;}
+.modal-close:hover{background:#f1f5f9;color:#374151;}
+
+/* ── 보고서 ── */
+.rpt-sec{background:#fff;border:1px solid #e8edf5;border-radius:.75rem;padding:1.1rem 1.25rem;border-left:4px solid #1B4F9E;}
+.rpt-sec h3{font-size:.88rem;font-weight:800;color:#1B4F9E;margin-bottom:.65rem;}
+
+/* ── CORS 안내 ── */
+.cors-banner{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:.75rem;padding:1rem 1.25rem;}
+
+/* ── 슬라이드인 ── */
+@keyframes fadein{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.fadein{animation:fadein .3s ease;}
+
+/* ── 상세 패널 네비 ── */
+.detail-nav{background:#fff;border-bottom:1px solid #e8edf5;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.detail-nav-inner{max-width:1200px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+.back-btn{display:flex;align-items:center;gap:.35rem;font-size:.8rem;font-weight:600;color:#64748b;background:none;border:1px solid #e2e8f0;border-radius:.5rem;padding:.4rem .8rem;cursor:pointer;font-family:inherit;transition:all .15s;}
+.back-btn:hover{color:#1B4F9E;border-color:#1B4F9E;}
+.mn-pill{font-size:.75rem;font-weight:600;padding:.38rem .9rem;border-radius:999px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-family:inherit;transition:all .15s;}
+.mn-pill:hover{border-color:#93c5fd;color:#1d4ed8;}
+.mn-pill.on{background:#1B4F9E;color:#fff;border-color:#1B4F9E;}
+
+/* ── 분석 진행 스텝 ── */
+.step-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .9rem;border-radius:.6rem;background:#f8fafc;border:1px solid #e8edf5;font-size:.82rem;}
+
+/* ── 결과 안내 ── */
+.empty-box{text-align:center;padding:2.5rem 1rem;color:#94a3b8;}
+.empty-box .e-icon{font-size:2.5rem;margin-bottom:.6rem;}
+.empty-box p{font-size:.82rem;}
+
+@media(max-width:700px){
+  .banner-grid{grid-template-columns:repeat(2,1fr);}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .cat-grid{grid-template-columns:repeat(2,1fr);}
+  .ord-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media print{.no-print{display:none!important;}}
+</style>
+</head>
+<body>
+
+<!-- ████ 상단 헤더 ████ -->
+<header class="site-header no-print">
+  <div class="site-header-inner">
+    <div class="site-logo">
+      <div class="site-logo-badge">경</div>
+      <div>
+        <div class="site-logo-text">경기도의회 입법분석 지원 시스템</div>
+        <div class="site-logo-sub">Gyeonggi Provincial Assembly Legislative Analysis System</div>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:rgba(255,255,255,.55);" id="hdrDate"></div>
+  </div>
+</header>
+</div>
+</div>
+
+<!-- ████ 통합 검색 바 ████ -->
+<div class="search-bar-wrap no-print" style="position:relative;">
+  <div class="search-bar-inner">
+    <select id="heroRegion" style="min-width:120px;"></select>
+    <input id="heroSearch" type="text" placeholder="조례명 통합검색..." onkeydown="if(event.key==='Enter')heroSearchGo()" autocomplete="off">
+    <button class="btn-primary" onclick="heroSearchGo()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      검색
+    </button>
+  </div>
+  <!-- 검색 결과 드롭다운 -->
+  <div id="heroResultPanel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:9999;
+       background:#fff;border:1.5px solid #bfdbfe;border-radius:.85rem;box-shadow:0 8px 32px rgba(27,79,158,.15);
+       max-height:420px;overflow-y:auto;padding:.5rem;">
+    <div id="heroResultInner"></div>
+  </div>
+</div>
+
+<div id="detail-panel" class="hidden">
+
+
+
+  <!-- ════ 동향현황판 ════ -->
+  <section id="dash-section" class="hidden">
+    <div class="main-wrap fadein">
+
+      <!-- 섹션 타이틀 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="sec-title">
+          <div class="sec-title-bar"></div>
+          <h2>전국조례동향현황판</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:.65rem;">
+          <span style="font-size:.7rem;color:#64748b;">조례원문이 보이지 않으면 조회 버튼을 한번 더 클릭해주세요</span>
+          <button class="btn-primary" onclick="applyDashFilter()" style="font-size:.75rem;padding:.42rem 1rem;">🔍 조회</button>
+        </div>
+      </div>
+
+      <!-- 필터 카드 -->
+      <div class="card card-pad" style="margin-bottom:1.25rem;">
+        <div class="filter-bar">
+
+          <div class="filter-group">
+            <label>분 야</label>
+            <select id="f-cat">
+              <option value="">전체 분야</option>
+              <option value="복지">❤️ 복지·보건</option>
+              <option value="청년">🎓 청년·교육</option>
+              <option value="환경">🌿 환경·기후</option>
+              <option value="경제">💼 경제·산업</option>
+              <option value="주거">🏘 도시·주거</option>
+              <option value="안전">🛡 안전·재난</option>
+              <option value="문화">🎭 문화·관광</option>
+              <option value="지원">🏛 행정·지원</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>구 분</label>
+            <div class="pill-group">
+              <button class="pill on" data-st="" onclick="setPill(this,'status','')">전체</button>
+              <button class="pill" data-st="제정" onclick="setPill(this,'status','제정')">🌱 제정</button>
+              <button class="pill" data-st="개정" onclick="setPill(this,'status','개정')">✏️ 개정</button>
+              <button class="pill" data-st="폐지" onclick="setPill(this,'status','폐지')">🗑 폐지</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>기 간</label>
+            <div class="pill-group">
+              <button class="pill" data-m="1"  onclick="setPill(this,'month',1)">1개월</button>
+              <button class="pill" data-m="3"  onclick="setPill(this,'month',3)">3개월</button>
+              <button class="pill" data-m="6"  onclick="setPill(this,'month',6)">6개월</button>
+              <button class="pill on" data-m="12" onclick="setPill(this,'month',12)">1년</button>
+              <button class="pill" data-m="24" onclick="setPill(this,'month',24)">2년</button>
+              <button class="pill" data-m="36" onclick="setPill(this,'month',36)">3년</button>
+              <button class="pill" data-m="48" onclick="setPill(this,'month',48)">4년</button>
+            </div>
+          </div>
+
+        </div>
+        <p style="font-size:.68rem;color:#94a3b8;margin-top:.75rem;" id="dashRange">최근 1년 전국 자치법규 현황</p>
+      </div>
+
+      <!-- 통계 -->
+      <div class="stat-row">
+        <div class="stat-item total">
+          <div class="s-label">전 체</div>
+          <div id="s-total" class="s-num">-</div>
+          <div class="s-unit" style="color:#94a3b8;">건</div>
+        </div>
+        <div class="stat-item enact">
+          <div class="s-label">🌱 제 정</div>
+          <div id="s-enact" class="s-num">-</div>
+          <div class="s-unit" style="color:#4ade80;">건</div>
+        </div>
+        <div class="stat-item amend">
+          <div class="s-label">✏️ 개 정</div>
+          <div id="s-amend" class="s-num">-</div>
+          <div class="s-unit" style="color:#facc15;">건</div>
+        </div>
+        <div class="stat-item abolish">
+          <div class="s-label">🗑 폐 지</div>
+          <div id="s-abolish" class="s-num">-</div>
+          <div class="s-unit" style="color:#f87171;">건</div>
+        </div>
+      </div>
+
+      <!-- 분야별 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+        <div class="sec-title" style="margin-bottom:0;">
+          <div class="sec-title-bar" style="background:#7c3aed;"></div>
+          <h3>분야별 조례 현황</h3>
+          <span id="catBadge" class="sec-badge hidden"></span>
+        </div>
+        <button id="catGridToggle" onclick="toggleCatGrid()"
+          style="font-size:.72rem;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:.5rem;padding:.3rem .75rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;font-family:inherit;transition:all .15s;">
+          <span id="catGridArrow">▲</span> 접기
+        </button>
+      </div>
+      <div class="cat-grid" id="catGrid"></div>
+
+      <!-- 최신 조례 -->
+      <div id="tl-section-top" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+        <div class="sec-title" style="margin-bottom:0;">
+          <div class="sec-title-bar" style="background:#0891b2;"></div>
+          <h3>최신 신규 제정 조례</h3>
+          <span class="sec-badge" style="background:#dcfce7;color:#15803d;border-color:#86efac;">최근 1년 제정</span>
+          <span id="tlStatus" class="sec-badge"></span>
+        </div>
+      </div>
+      <div class="ord-grid" id="timeline"></div>
+      <div id="tlMore" class="hidden" style="text-align:center;margin-top:1rem;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;">
+        <button id="tlMoreBtn" class="btn-outline" onclick="loadMoreTl()">더 보기 ↓</button>
+        <button id="tlCollapseBtn" class="btn-outline hidden" onclick="collapseTl()" style="border-color:#94a3b8;color:#64748b;">접기 ↑</button>
+      </div>
+
+
+    </div>
+  </section>
+
+
+</div><!-- /detail-panel -->
+
+<!-- ████ 법령 본문 모달 ████ -->
+<div id="lawModal" class="modal-bg" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle" style="font-size:.9rem;font-weight:700;color:#0f172a;flex:1;margin-right:.5rem;"></h3>
+      <div style="display:flex;gap:.5rem;flex-shrink:0;">
+        <button class="btn-outline" style="font-size:.72rem;padding:.3rem .7rem;" onclick="exportPDF('modalContent','법령본문.pdf')">⬇ PDF</button>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div id="modalContent" class="modal-body"></div>
+  </div>
+</div>
+
+
+<!-- ████ FOOTER ████ -->
+<!-- ── 경기도 미제정 조례 배너 ── -->
+<div class="no-print" style="background:#f0f4fb;border-bottom:1px solid #dbeafe;padding:.65rem 1.5rem;">
+  <div style="max-width:1200px;margin:0 auto;">
+    <button id="gg-missing-btn" onclick="toggleGgMissing()"
+      style="width:100%;background:linear-gradient(135deg,#0d2550,#1B4F9E);color:#fff;border:none;border-radius:.85rem;padding:.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;transition:opacity .18s;box-shadow:0 3px 12px rgba(27,79,158,.22);">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <div style="width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🔍</div>
+        <div style="text-align:left;">
+          <div style="font-size:.87rem;font-weight:800;letter-spacing:-.01em;">경기도 미제정 조례 확인</div>
+          <div style="font-size:.68rem;color:rgba(255,255,255,.7);margin-top:.15rem;">베너를 클릭해서 확인하세요. (10분이내 소요)</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <span id="gg-missing-badge" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:999px;font-size:.7rem;font-weight:700;padding:.2rem .7rem;display:none;"></span>
+        <span id="gg-missing-arrow" style="font-size:1rem;transition:transform .25s;">▼</span>
+      </div>
+    </button>
+
+    <!-- 결과 패널 -->
+    <div id="gg-missing-panel" style="display:none;margin-top:.6rem;">
+      <div class="card card-pad">
+
+        <!-- 진행 상황 -->
+        <div id="gg-missing-progress" style="display:none;padding:.5rem 0;">
+          <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:#64748b;margin-bottom:.75rem;">
+            <div class="loader"></div><span id="gg-missing-status">분석 중...</span>
+          </div>
+          <div id="gg-missing-steps" style="display:flex;flex-direction:column;gap:.4rem;max-height:180px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- ① 미제정 배너 + 결과 -->
+        <div style="margin-bottom:.65rem;">
+          <button onclick="toggleGgTab('missing')" id="gg-tab-btn-missing"
+            style="width:100%;background:linear-gradient(135deg,#eef4ff,#dbeafe);border:1.5px solid #93c5fd;
+                   border-radius:.85rem;padding:.85rem 1.2rem;cursor:pointer;transition:all .18s;font-family:inherit;
+                   display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <div style="background:#1B4F9E;color:#fff;border-radius:50%;width:1.7rem;height:1.7rem;
+                          display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0;">①</div>
+              <div style="text-align:left;">
+                <div style="font-size:.67rem;font-weight:700;color:#1e40af;letter-spacing:.06em;opacity:.8;">유형 I</div>
+                <div style="font-size:.88rem;font-weight:800;color:#1e3a8a;">경기도 미제정 조례</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0;">
+              <span id="gg-missing-count" style="background:#1B4F9E;color:#fff;border-radius:999px;font-size:.63rem;font-weight:700;padding:.13rem .55rem;white-space:nowrap;"></span>
+              <div class="gg-tab-arrow" style="font-size:.8rem;color:#3b82f6;font-weight:700;">▼</div>
+            </div>
+          </button>
+          <div id="gg-tab-missing-panel" style="display:none;margin-top:.4rem;padding:.75rem;background:#f8fbff;border-radius:.75rem;border:1px solid #dbeafe;">
+            <div id="gg-missing-wrap">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;gap:.5rem;flex-wrap:wrap;">
+                <p style="font-size:.72rem;color:#64748b;flex:1;" id="gg-missing-desc">
+                  서울특별시·부산광역시 등 16개 광역지자체에 현존하는 조례 중, 경기도에 동일·유사한 조례가 없는 항목입니다.
+                </p>
+                <div style="display:flex;gap:.4rem;flex-shrink:0;">
+                  <button class="btn-outline" onclick="exportPDF('gg-missing-wrap','경기도미제정조례.pdf')" style="font-size:.72rem;">⬇ PDF</button>
+                  <button class="btn-outline" onclick="exportGgMissingWord()" style="font-size:.72rem;">⬇ Word</button>
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead><tr>
+                    <th style="min-width:60px;">분야</th>
+                    <th style="min-width:70px;">시·도</th>
+                    <th>조례명</th>
+                    <th style="min-width:80px;text-align:center;">제정일</th>
+                    <th style="min-width:80px;text-align:center;">경기도 현황</th>
+                  </tr></thead>
+                  <tbody id="gg-missing-tbody"><tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:1.5rem;font-size:.8rem;">⏳ 분석 중입니다. 잠시 기다려 주세요…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ② 개정·폐지 배너 + 결과 -->
+        <div style="margin-bottom:.65rem;">
+          <button onclick="toggleGgTab('obsolete')" id="gg-tab-btn-obsolete"
+            style="width:100%;background:linear-gradient(135deg,#eff6ff,#bfdbfe);border:1.5px solid #93c5fd;
+                   border-radius:.85rem;padding:.85rem 1.2rem;cursor:pointer;transition:all .18s;font-family:inherit;
+                   display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <div style="background:#1B4F9E;color:#fff;border-radius:50%;width:1.7rem;height:1.7rem;
+                          display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0;">②</div>
+              <div style="text-align:left;">
+                <div style="font-size:.67rem;font-weight:700;color:#1e40af;letter-spacing:.06em;opacity:.8;">유형 II</div>
+                <div style="font-size:.88rem;font-weight:800;color:#1e3a8a;">타시도 개정·폐지 → 경기도 현존 조례</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0;">
+              <span id="gg-obsolete-count" style="background:#1B4F9E;color:#fff;border-radius:999px;font-size:.63rem;font-weight:700;padding:.13rem .55rem;white-space:nowrap;"></span>
+              <div class="gg-tab-arrow" style="font-size:.8rem;color:#3b82f6;font-weight:700;">▼</div>
+            </div>
+          </button>
+          <div id="gg-tab-obsolete-panel" style="display:none;margin-top:.4rem;padding:.75rem;background:#f8fbff;border-radius:.75rem;border:1px solid #dbeafe;">
+            <p style="font-size:.72rem;color:#64748b;margin-bottom:.75rem;">
+              16개 광역지자체에서 최근 4년 이내 개정·공포된 조례 중, 경기도에 유사한 조례가 현행 상태로 남아있는 항목입니다.
+              타 시·도 입법 변화를 반영하여 경기도 조례의 정합성 및 존치 필요성에 대한 검토가 필요합니다.
+            </p>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead><tr>
+                  <th style="min-width:60px;">분야</th>
+                  <th style="min-width:70px;">시·도</th>
+                  <th>타 시·도 조례명</th>
+                  <th style="min-width:80px;text-align:center;">공포일</th>
+                  <th>경기도 현존 조례명</th>
+                  <th style="min-width:80px;text-align:center;">검토 필요성</th>
+                </tr></thead>
+                <tbody id="gg-obsolete-tbody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:1.5rem;font-size:.8rem;">⏳ 분석 중입니다. 잠시 기다려 주세요…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 선도 배너 + 결과 -->
+        <div style="margin-bottom:.5rem;">
+          <button onclick="toggleGgTab('lead')" id="gg-tab-btn-lead"
+            style="width:100%;background:linear-gradient(135deg,#e8f0fe,#bfdbfe);border:1.5px solid #93c5fd;
+                   border-radius:.85rem;padding:.85rem 1.2rem;cursor:pointer;transition:all .18s;font-family:inherit;
+                   display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <div style="background:#1B4F9E;color:#fff;border-radius:50%;width:1.7rem;height:1.7rem;
+                          display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0;">③</div>
+              <div style="text-align:left;">
+                <div style="font-size:.67rem;font-weight:700;color:#1e40af;letter-spacing:.06em;opacity:.8;">유형 III</div>
+                <div style="font-size:.88rem;font-weight:800;color:#1e3a8a;">경기도 선도 조례 현황</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0;">
+              <span id="gg-lead-count" style="background:#1B4F9E;color:#fff;border-radius:999px;font-size:.63rem;font-weight:700;padding:.13rem .55rem;white-space:nowrap;"></span>
+              <div class="gg-tab-arrow" style="font-size:.8rem;color:#3b82f6;font-weight:700;">▼</div>
+            </div>
+          </button>
+          <div id="gg-tab-lead-panel" style="display:none;margin-top:.4rem;padding:.75rem;background:#f8fbff;border-radius:.75rem;border:1px solid #dbeafe;">
+            <p style="font-size:.72rem;color:#64748b;margin-bottom:.75rem;">
+              경기도에 현행 조례가 있으나 16개 광역지자체 모두에 유사 조례가 없는 항목입니다.
+              경기도가 선제적으로 입법한 조례로, 타 시·도 확산 가능성 및 정책 선도 사례로 활용할 수 있습니다.
+            </p>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead><tr>
+                  <th style="min-width:60px;">분야</th>
+                  <th>경기도 조례명</th>
+                  <th style="min-width:80px;text-align:center;">공포일</th>
+                  <th style="min-width:55px;text-align:center;">구분</th>
+                  <th style="min-width:120px;text-align:center;">타 지자체 현황</th>
+                </tr></thead>
+                <tbody id="gg-lead-tbody"><tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:1.5rem;font-size:.8rem;">⏳ 분석 중입니다. 잠시 기다려 주세요…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:.68rem;color:#94a3b8;margin-top:.75rem;">⚠️ API 검색 기반 추정 결과이며, 최종 판단은 의회 법제 담당 부서 검토가 필요합니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ 상세 패널 (배너 클릭 시 열림) ████ -->
+<footer class="no-print" style="background:#1e293b;color:#94a3b8;padding:1.25rem 1.5rem;margin-top:2rem;text-align:center;font-size:.72rem;">
+  <p style="color:#cbd5e1;font-weight:600;margin-bottom:.3rem;">경기도의회 입법분석 지원 시스템</p>
+  <p>법제처 국가법령정보 Open API (OC: bitsam24) 연동 · 본 시스템 결과는 참고용이며 <b style="color:#94a3b8;">최종 판단은 의회 법제 담당 부서 검토 필요</b></p>
+</footer>
+
+<!-- ████ SCRIPT ████ -->
+<script>
+/* ── 설정 ── */
+const OC = 'bitsam24';
+
+/* ── 멀티 프록시 폴백 ── */
+const PROXIES = [
+  u => u.replace('http://','https://'),
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://proxy.cors.sh/${u}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://thingproxy.freeboard.io/fetch/${u}`,
+];
+let activeProxy = 0;
+
+// ── 전역 API 요청 큐 (gg-missing 전용) ──
+let _ggRunning = false;
+const _apiQueue = [];
+let   _apiActive = 0;
+const MAX_API_CONCURRENT = 2;
+
+function _drainApiQueue(){
+  while(_apiActive < MAX_API_CONCURRENT && _apiQueue.length > 0){
+    const {fn, resolve, reject} = _apiQueue.shift();
+    _apiActive++;
+    fn().then(resolve).catch(reject).finally(()=>{
+      _apiActive--;
+      setTimeout(_drainApiQueue, 80);
+    });
+  }
+}
+// gg-missing 전용 큐 경유 fetchXML
+function qFetch(apiUrl){
+  return new Promise((resolve, reject)=>{
+    _apiQueue.push({fn:()=>fetchXML(apiUrl), resolve, reject});
+    _drainApiQueue();
+  });
+}
+
+// ── 대시보드 전용 제어 ──
+// 동시 요청 3개로 제한하는 세마포어 (프록시 rate-limit 방지)
+// 조회 클릭마다 ID를 증가시켜 이전 요청 결과가 DOM을 덮어쓰는 race condition 방지
+let _dashCallId  = 0;   // 현재 유효한 조회 ID
+let _dashActive  = 0;   // 현재 진행 중인 대시보드 API 요청 수
+const DASH_MAX_CONCURRENT = 3;
+
+async function dashFetch(apiUrl){
+  // 동시 3개 초과 시 슬롯 대기
+  while(_dashActive >= DASH_MAX_CONCURRENT) await dl(120);
+  _dashActive++;
+  try{ return await fetchXML(apiUrl); }
+  finally{ _dashActive--; }
+}
+
+async function fetchXML(apiUrl) {
+  // 모든 프록시를 동시에 시도 — 가장 먼저 성공한 응답 사용 (Promise.any)
+  const tryProxy = async (proxyFn, extraHeaders = {}) => {
+    const url = proxyFn(apiUrl);
+    const res = await fetch(url, {signal: AbortSignal.timeout(12000), headers: extraHeaders});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    if (!txt || txt.length < 30 || txt.trim().startsWith('<!')) throw new Error('빈 응답');
+    const xml = new DOMParser().parseFromString(txt, 'text/xml');
+    if (xml.querySelector('parsererror')) throw new Error('XML 파싱 오류');
+    return xml;
+  };
+  const attempts = PROXIES.map((p, i) =>
+    tryProxy(p, i === 2 ? {'x-requested-with': 'XMLHttpRequest'} : {})
+  );
+  try {
+    return await Promise.any(attempts);
+  } catch {
+    throw new Error('모든 프록시 연결 실패');
+  }
+}
+
+/* ── 상수 ── */
+const REGIONS = ['경기도','서울특별시','인천광역시','부산광역시','대구광역시','광주광역시',
+  '대전광역시','울산광역시','세종특별자치시','강원특별자치도','충청북도','충청남도',
+  '전북특별자치도','전라남도','경상북도','경상남도','제주특별자치도'];
+const DEF_REGIONS = ['경기도','서울특별시','인천광역시','부산광역시','경상남도','경상북도'];
+const CATS = [
+  {id:'welfare',icon:'❤️',label:'복지·보건',kw:'복지',color:'#dc2626'},
+  {id:'youth',  icon:'🎓',label:'청년·교육',kw:'청년',color:'#2563eb'},
+  {id:'env',    icon:'🌿',label:'환경·기후',kw:'환경',color:'#16a34a'},
+  {id:'econ',   icon:'💼',label:'경제·산업',kw:'경제',color:'#d97706'},
+  {id:'urban',  icon:'🏘', label:'도시·주거',kw:'주거',color:'#7c3aed'},
+  {id:'safety', icon:'🛡', label:'안전·재난',kw:'안전',color:'#ea580c'},
+  {id:'culture',icon:'🎭',label:'문화·관광',kw:'문화',color:'#db2777'},
+  {id:'admin',  icon:'🏛', label:'행정·지원',kw:'지원',color:'#0f766e'},
+];
+
+/* ── 유틸 ── */
+const gt  = (el,tag) => { const n=el.querySelector(tag); return n?n.textContent.trim():''; };
+const fmt = d => (!d||d.length<8)?d||'-':`${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}`;
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const dl  = ms => new Promise(r=>setTimeout(r,ms));
+const tod = () => new Date().toISOString().slice(0,10).replace(/-/g,'');
+const d2a = v => v.replace(/-/g,'');
+const dAgo = ds => { if(!ds||ds.length<8)return 999; return Math.floor((Date.now()-new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`))/86400000); };
+const getDR = m => {
+  const to=new Date(), fr=new Date();
+  if(m>=12) fr.setFullYear(fr.getFullYear()-Math.floor(m/12)); else fr.setMonth(fr.getMonth()-m);
+  const ts=to.toISOString().slice(0,10).replace(/-/g,''), fs=fr.toISOString().slice(0,10).replace(/-/g,'');
+  return {fs,ts,fd:fmt(fs),td:fmt(ts)};
+};
+const getOrdName = el => gt(el,'법령명한글')||gt(el,'법령명')||gt(el,'자치법규명')||'';
+const inRange = (el,fs,ts) => { const d=gt(el,'공포일자'); return !d||d.length<8||( d>=fs && d<=ts); };
+const lawSt = nm => {
+  const n=nm.toLowerCase();
+  if(n.includes('폐지'))   return {lb:'폐지',   cls:'badge-abolish'};
+  if(n.includes('전부개정')) return {lb:'전부개정',cls:'badge-full'};
+  if(n.includes('개정'))    return {lb:'개정',   cls:'badge-amend'};
+  return {lb:'제정',cls:'badge-enact'};
+};
+const chkAll = v => document.querySelectorAll('.rcb').forEach(cb=>cb.checked=v);
+
+/* ── 초기화 ── */
+document.getElementById('hdrDate').textContent =
+  new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+
+/* 드롭다운 채우기 */
+/* heroRegion 드롭다운 채우기 */
+(function(){
+  const s=document.getElementById('heroRegion');
+  const o=document.createElement('option'); o.value=''; o.textContent='전체 시·도'; s.appendChild(o);
+  REGIONS.forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;s.appendChild(o);});
+})();
+
+
+/* ── 필터 pill ── */
+let dashFilter={months:12,status:'',cat:''};
+function setPill(btn,type,val){
+  const group = type==='status' ? document.querySelectorAll('[data-st]') : document.querySelectorAll('[data-m]');
+  group.forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(type==='status') dashFilter.status=val;
+  else dashFilter.months=val;
+}
+
+/* ── 배너 ── */
+let dashLoaded=false;
+function goBanner(secId, tool){
+  const panel=document.getElementById('detail-panel');
+  panel.classList.remove('hidden');
+  // 섹션 전환
+  document.getElementById('dash-section').classList.remove('hidden');
+  // 배너 버튼 활성화
+  document.getElementById('bb-dash')?.classList.remove('active');
+  document.getElementById('bb-dash')?.classList.add('active');
+  // 대시보드 초기 로드
+  if(secId==='dash-section' && !dashLoaded){ dashLoaded=true; applyDashFilter(); }
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+function closeDetail(){
+  document.getElementById('detail-panel').classList.add('hidden');
+  document.getElementById('bb-dash')?.classList.remove('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+/* ── Hero 검색 ── */
+async function heroSearchGo(){
+  const q  = document.getElementById('heroSearch').value.trim();
+  const r  = document.getElementById('heroRegion').value;
+  if(!q && !r){ alert('검색어 또는 시·도를 선택하세요.'); return; }
+  const query  = [r, q].filter(Boolean).join(' ');
+  const panel  = document.getElementById('heroResultPanel');
+  const inner  = document.getElementById('heroResultInner');
+
+  panel.style.display = 'block';
+  inner.innerHTML = `<div style="display:flex;align-items:center;gap:.6rem;color:#64748b;font-size:.82rem;padding:.5rem .7rem;">
+    <div class="loader"></div> 「${esc(query)}」 검색 중...</div>`;
+
+  try{
+    const xml   = await fetchXML(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent(query)}&display=20`);
+    const total = parseInt(gt(xml,'totalCnt')) || 0;
+    const laws  = Array.from(xml.querySelectorAll('law'));
+
+    if(!laws.length){
+      inner.innerHTML = `<div style="text-align:center;color:#94a3b8;font-size:.82rem;padding:1.2rem;">
+        「${esc(query)}」 검색 결과가 없습니다.</div>`;
+      return;
+    }
+
+    inner.innerHTML = `<div style="font-size:.72rem;color:#64748b;padding:.4rem .7rem .2rem;border-bottom:1px solid #e8edf5;margin-bottom:.3rem;">
+      「${esc(query)}」 검색결과 총 <b style="color:#1B4F9E;">${total.toLocaleString()}건</b>
+      <span style="color:#94a3b8;margin-left:.4rem;">(상위 ${laws.length}건 표시)</span>
+      <button onclick="document.getElementById('heroResultPanel').style.display='none'"
+        style="float:right;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:.8rem;padding:0;">✕</button>
+    </div>`;
+
+    laws.forEach((law, idx) => {
+      const id   = gt(law,'법령일련번호') || gt(law,'자치법규일련번호');
+      const name = getOrdName(law);
+      const rgn  = gt(law,'자치단체명') || '';
+      const date = fmt(gt(law,'공포일자'));
+      const s    = lawSt(name);
+
+      const lawNo = gt(law,'법령일련번호') || gt(law,'자치법규일련번호') || '';
+      // 법제처 원문 URL (직접 링크)
+      const lawUrl = id ? `https://www.law.go.kr/LSW/ordinInfoP.do?ordinSeq=${id}` : '';
+
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:.55rem .75rem;cursor:pointer;border-radius:.55rem;transition:background .12s;display:flex;align-items:flex-start;gap:.65rem;';
+      div.onmouseenter = () => div.style.background = '#eff6ff';
+      div.onmouseleave = () => div.style.background = '';
+      div.innerHTML = `
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.25rem;">
+            ${rgn ? `<span style="background:#eff6ff;color:#1B4F9E;border-radius:4px;padding:.1rem .4rem;font-size:.65rem;font-weight:700;">${esc(rgn)}</span>` : ''}
+            <span class="badge ${s.cls}" style="font-size:.65rem;">${s.lb}</span>
+            ${date ? `<span style="color:#94a3b8;font-size:.65rem;">${date}</span>` : ''}
+          </div>
+          <div style="font-size:.82rem;font-weight:600;color:#1e293b;line-height:1.4;word-break:keep-all;">${esc(name)}</div>
+        </div>
+        <div style="display:flex;gap:.3rem;flex-shrink:0;margin-top:.1rem;">
+          <button onclick="event.stopPropagation();viewLaw('${id}','ordin','${esc(name)}')"
+            style="font-size:.68rem;padding:.25rem .55rem;background:#1B4F9E;color:#fff;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;">
+            원문 보기
+          </button>
+          ${lawUrl ? `<a href="${lawUrl}" target="_blank" onclick="event.stopPropagation()"
+            style="font-size:.68rem;padding:.25rem .55rem;background:#f1f5f9;color:#475569;border-radius:4px;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:.2rem;">
+            ↗ 법제처
+          </a>` : ''}
+        </div>`;
+      div.onclick = () => viewLaw(id, 'ordin', name);
+      inner.appendChild(div);
+    });
+  } catch(e) {
+    inner.innerHTML = `<div style="color:#dc2626;font-size:.8rem;padding:.75rem;">
+      검색 오류: ${esc(e.message)}<br>
+      <a href="https://www.law.go.kr/ordinSc.do?query=${encodeURIComponent(query)}" target="_blank"
+        style="color:#1B4F9E;font-size:.78rem;">→ 법제처 자치법규 검색으로 이동</a>
+    </div>`;
+  }
+
+  // 패널 외부 클릭 시 닫기
+  document.addEventListener('click', function closePanel(e){
+    if(!document.querySelector('.search-bar-wrap')?.contains(e.target)){
+      document.getElementById('heroResultPanel').style.display='none';
+      document.removeEventListener('click', closePanel);
+    }
+  });
+}
+
+/* ── 대시보드 ── */
+let dashFr,dashTo,tlPage=1;
+
+function applyDashFilter(){
+  // ★ 조회ID 증가: 이전 요청의 결과가 DOM을 업데이트하지 못하도록 무효화
+  const myId = ++_dashCallId;
+
+  dashFilter.cat=document.getElementById('f-cat').value;
+  const {fs,ts,fd,td}=getDR(dashFilter.months);
+  dashFr=fs; dashTo=ts;
+  const catLabel=dashFilter.cat||'전체 분야';
+  const stLabel=dashFilter.status||'전체';
+  document.getElementById('dashRange').textContent=`조회 기간: ${fd} ~ ${td} · ${catLabel} · ${stLabel}`;
+  const mo=dashFilter.months;
+  const periodLabel = mo%12===0 ? `최근 ${mo/12}년` : `최근 ${mo}개월`;
+
+  const badge=document.getElementById('catBadge');
+  if(dashFilter.cat||dashFilter.status){
+    badge.textContent=[dashFilter.cat,dashFilter.status].filter(Boolean).join(' · ');
+    badge.classList.remove('hidden');
+  } else badge.classList.add('hidden');
+
+  ['s-total','s-enact','s-amend','s-abolish'].forEach(k=>
+    document.getElementById(k).innerHTML='<div class="sk" style="height:28px;width:60px;margin:0 auto;"></div>');
+  buildCatSkel();
+  loadStats(fs,ts,myId);
+  const cats=CATS.filter(c=>!dashFilter.cat||c.kw===dashFilter.cat);
+  // ★ 카테고리 순차 로딩: 이전 조회(myId 불일치)면 중단
+  (async()=>{ for(const cat of cats){ await dl(200); if(_dashCallId!==myId) break; loadCat(cat,fs,ts,myId); } })();
+  tlPage=1; document.getElementById('timeline').innerHTML='';
+  loadTl(true);
+}
+
+// ★ loadStats: 날짜 필터가 적용된 실제 결과 카운트 방식
+//   법제처 API의 totalCnt는 efYdFr/efYdTo 날짜 필터를 무시하고 전체 누적건수를 반환함
+//   → display=100 결과를 직접 카운트해야 날짜별 수치가 정확하게 반영됨
+//   _dashCallId/dashFetch 세마포어로 race condition·rate-limit은 계속 방지
+async function loadStats(fs, ts, callId){
+  try{
+    const baseKw = dashFilter.cat || '조례';
+    // ★ 캐시버스터: 프록시/브라우저 캐시로 인해 다른 날짜범위가 동일 결과를 반환하는 문제 방지
+    const cb = `&_cb=${fs}${ts}`;
+    const xml = await dashFetch(
+      `http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML` +
+      `&query=${encodeURIComponent(baseKw)}&display=100&page=1&efYdFr=${fs}&efYdTo=${ts}${cb}`
+    );
+
+    if(callId !== undefined && callId !== _dashCallId) return;
+
+    // API가 날짜 필터링한 결과를 inRange로 한번 더 검증
+    const laws = Array.from(xml.querySelectorAll('law')).filter(l=>inRange(l,fs,ts));
+    let en=0, am=0, ab=0;
+    laws.forEach(l=>{
+      const s = lawSt(getOrdName(l));
+      if(dashFilter.status && s.lb!==dashFilter.status && !(dashFilter.status==='개정'&&s.lb==='전부개정')) return;
+      if(s.lb==='폐지') ab++; else if(s.lb==='제정') en++; else am++;
+    });
+    const tot = en + am + ab;
+
+    document.getElementById('s-total').textContent   = tot.toLocaleString();
+    document.getElementById('s-enact').textContent   = en.toLocaleString();
+    document.getElementById('s-amend').textContent   = am.toLocaleString();
+    document.getElementById('s-abolish').textContent = ab.toLocaleString();
+    const errEl=document.getElementById('stats-err'); if(errEl) errEl.remove();
+
+  }catch(e){
+    if(callId !== undefined && callId !== _dashCallId) return;
+    ['s-total','s-enact','s-amend','s-abolish'].forEach(k=>document.getElementById(k).textContent='-');
+    const old=document.getElementById('stats-err'); if(old) old.remove();
+    const errDiv=document.createElement('div');
+    errDiv.id='stats-err';
+    errDiv.style.cssText='grid-column:span 4;background:#fff8ed;border:1px solid #fcd34d;border-radius:.6rem;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;font-size:.76rem;margin-top:.5rem;';
+    errDiv.innerHTML=`<span style="color:#92400e;">⚠️ API 통계 조회 실패 — 재시도하거나 CORS 확장 활성화 후 시도하세요.</span>
+      <button onclick="retryStats('${fs}','${ts}',${callId??_dashCallId})" style="background:#1B4F9E;color:#fff;border:none;border-radius:.45rem;padding:.3rem .8rem;font-size:.73rem;font-weight:600;cursor:pointer;font-family:inherit;">↻ 재시도</button>`;
+    document.getElementById('s-total').closest('.stat-row').insertAdjacentElement('afterend', errDiv);
+  }
+}
+function retryStats(fs, ts, callId){
+  const old=document.getElementById('stats-err'); if(old) old.remove();
+  ['s-total','s-enact','s-amend','s-abolish'].forEach(k=>
+    document.getElementById(k).innerHTML='<div class="sk" style="height:28px;width:60px;margin:0 auto;"></div>');
+  loadStats(fs, ts, callId ?? _dashCallId);
+}
+
+function buildCatSkel(){
+  const g=document.getElementById('catGrid'); g.innerHTML='';
+  CATS.filter(c=>!dashFilter.cat||c.kw===dashFilter.cat).forEach(c=>{
+    const d=document.createElement('div');
+    d.id=`cat-${c.id}`; d.className='cat-card';
+    d.innerHTML=`<div class="cat-head"><span class="c-icon">${c.icon}</span><span class="c-label">${c.label}</span>
+      <span class="c-count" style="background:${c.color};"><div class="sk" style="height:14px;width:24px;background:rgba(255,255,255,.3);"></div></span></div>
+      <div class="cat-body">${[0,1,2].map(()=>'<div class="cat-item"><div class="sk" style="height:11px;width:90%;margin-bottom:4px;"></div><div class="sk" style="height:9px;width:55%;"></div></div>').join('')}</div>`;
+    g.appendChild(d);
+  });
+}
+
+async function loadCat(cat,fs,ts,callId){
+  const el=document.getElementById(`cat-${cat.id}`); if(!el)return;
+  try{
+    // ★ dashFetch: 동시 3개 세마포어 → 프록시 rate-limit 방지
+    const xml=await dashFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent(cat.kw)}&display=20&page=1&efYdFr=${fs}&efYdTo=${ts}`);
+    // ★ stale 체크: 더 새로운 조회가 시작됐으면 무시
+    if(callId !== undefined && callId !== _dashCallId) return;
+    let laws=Array.from(xml.querySelectorAll('law')).filter(l=>inRange(l,fs,ts));
+    if(dashFilter.status) laws=laws.filter(l=>{const s=lawSt(getOrdName(l));return s.lb===dashFilter.status||(dashFilter.status==='개정'&&s.lb==='전부개정');});
+    // ★ totalCnt는 날짜 필터를 무시하므로 실제 날짜필터링된 laws.length 사용
+    const total=laws.length, show=laws.slice(0,3);
+    const items=!show.length
+      ?'<div style="text-align:center;padding:.6rem;color:#94a3b8;font-size:.72rem;">해당 기간 조례 없음</div>'
+      :show.map(l=>{
+          const id=gt(l,'법령일련번호')||gt(l,'자치법규일련번호');
+          const name=getOrdName(l); const rgn=gt(l,'자치단체명');
+          const date=fmt(gt(l,'공포일자')); const da=dAgo(gt(l,'공포일자'));
+          return `<div class="cat-item">
+            <div class="cat-item-name" onclick="viewLaw('${id}','ordin','${esc(name)}')">${esc(name)}</div>
+            <div class="cat-item-meta">
+              ${rgn?`<span class="cat-item-rgn">${esc(rgn)}</span>`:''}
+              <span class="cat-item-date">${date}</span>
+              ${da<=14?'<span class="cat-new">N</span>':''}
+            </div>
+          </div>`;
+        }).join('');
+    el.innerHTML=`<div class="cat-head">
+        <span class="c-icon">${cat.icon}</span>
+        <span class="c-label">${cat.label}</span>
+        <span class="c-count" style="background:${cat.color};">${total}</span>
+      </div>
+      <div class="cat-body">${items}</div>
+      ${total>3?`<div class="cat-footer">
+        <button class="cat-more" style="color:${cat.color};" data-orig="더 보기 (${total-3}건 더) →" onclick="expandCat('${cat.id}','${cat.kw}','${fs}','${ts}')">더 보기 (${total-3}건 더) →</button>
+      </div>`:''}` ;
+  }catch{
+    el.innerHTML=`<div class="cat-head"><span class="c-icon">${cat.icon}</span><span class="c-label">${cat.label}</span></div>
+      <div class="cat-body" style="text-align:center;padding:.8rem;">
+        <span style="font-size:.72rem;color:#94a3b8;">조회 실패</span><br>
+        <button onclick="loadCat(CATS.find(c=>c.id==='${cat.id}'),'${fs}','${ts}')" style="font-size:.7rem;color:#1B4F9E;background:none;border:none;cursor:pointer;margin-top:.3rem;">재시도</button>
+      </div>`;
+  }
+}
+
+// 최신 공포 조례: 항상 최근 1년 + 제정만 고정
+const TL_MONTHS = 12;
+let tlFr='', tlTo='';
+
+async function loadTl(reset=false){
+  const el=document.getElementById('timeline'), st=document.getElementById('tlStatus');
+  if(reset){
+    el.innerHTML='';
+    tlPage=1;
+    // 3개월 고정 범위 계산
+    const r=getDR(TL_MONTHS); tlFr=r.fs; tlTo=r.ts;
+  }
+  try{
+    const xml=await dashFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=조례&display=20&page=${tlPage}&efYdFr=${tlFr}&efYdTo=${tlTo}`);
+    const total=parseInt(gt(xml,'totalCnt'))||0;
+    // 공포일자 기준 3개월 내 + 제정만 필터
+    const laws=Array.from(xml.querySelectorAll('law')).filter(l=>{
+      if(!inRange(l,tlFr,tlTo)) return false;          // 공포일자 3개월 이내
+      const s=lawSt(getOrdName(l));
+      return s.lb==='제정';                              // 제정만
+    });
+    if(st) st.textContent=`최근 1년 제정 | 총 ${total.toLocaleString()}건`;
+    if(reset && laws.length===0){
+      el.innerHTML='<div style="grid-column:span 4;text-align:center;padding:2rem;color:#94a3b8;font-size:.82rem;">최근 1년 내 신규 제정 조례가 없습니다.</div>';
+      document.getElementById('tlMore').classList.add('hidden');
+      return;
+    }
+    laws.forEach(law=>{
+      const id=gt(law,'법령일련번호')||gt(law,'자치법규일련번호');
+      const name=getOrdName(law); const rgn=gt(law,'자치단체명');
+      const date=fmt(gt(law,'공포일자')); const da=dAgo(gt(law,'공포일자'));
+      const type=gt(law,'법령구분명')||'조례';
+      const card=document.createElement('div'); card.className='ord-card';
+      card.onclick=()=>viewLaw(id,'ordin',name);
+      card.innerHTML=`<div class="ord-card-meta">
+          ${rgn?`<span class="badge badge-rgn">${esc(rgn)}</span>`:''}
+          <span class="badge badge-enact">제정</span>
+          ${da<=14?'<span class="badge badge-new">NEW</span>':''}
+        </div>
+        <div class="ord-card-name">${esc(name)}</div>
+        <div class="ord-card-info">공포일: ${date} · ${esc(type)}</div>`;
+      el.appendChild(card);
+    });
+    const moreDiv=document.getElementById('tlMore');
+    const hasMore=tlPage*20<total;
+    moreDiv.classList.toggle('hidden', !hasMore && tlPage<=2);
+    if(!hasMore && tlPage>2) moreDiv.classList.remove('hidden');
+    document.getElementById('tlMoreBtn').classList.toggle('hidden', !hasMore);
+    document.getElementById('tlCollapseBtn').classList.toggle('hidden', tlPage<=2);
+    tlPage++;
+  }catch(e){
+    if(reset) el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;grid-column:span 4;padding:.5rem;">조회 실패: ${esc(e.message)}</div>`;
+  }
+}
+function loadMoreTl(){ loadTl(false); }
+
+let catGridOpen = true;
+function toggleCatGrid(){
+  const grid = document.getElementById('catGrid');
+  const arrow = document.getElementById('catGridArrow');
+  const btn   = document.getElementById('catGridToggle');
+  catGridOpen = !catGridOpen;
+  if(catGridOpen){
+    grid.style.display = '';
+    arrow.textContent  = '▲';
+    btn.innerHTML      = '<span id="catGridArrow">▲</span> 접기';
+  } else {
+    grid.style.display = 'none';
+    arrow.textContent  = '▼';
+    btn.innerHTML      = '<span id="catGridArrow">▼</span> 펼치기';
+  }
+}
+function collapseTl(){
+  const anchor=document.getElementById('tl-section-top');
+  if(anchor) anchor.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{ loadTl(true); },350);
+}
+function setPeriodKw(kw){
+  document.getElementById('heroSearch').value=kw;
+  document.getElementById('heroRegion').value='';
+  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(()=>{ heroSearchGo(); }, 300);
+}
+
+/* ── 분야별 카드 인라인 펼치기 ── */
+async function expandCat(catId, kw, fs, ts){
+  const el=document.getElementById(`cat-${catId}`);
+  if(!el) return;
+  const existing=el.querySelector('.cat-expanded');
+  const btn=el.querySelector('.cat-more');
+  // 이미 펼쳐져 있으면 접기
+  if(existing){
+    existing.remove();
+    if(btn){ btn.textContent=btn.dataset.orig||'더 보기 →'; btn.disabled=false; }
+    return;
+  }
+  if(btn){ btn.textContent='로딩 중...'; btn.disabled=true; }
+  try{
+    const xml=await dashFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent(kw)}&display=100&page=1&efYdFr=${fs}&efYdTo=${ts}`);
+    let laws=Array.from(xml.querySelectorAll('law')).filter(l=>inRange(l,fs,ts));
+    if(dashFilter.status) laws=laws.filter(l=>{const s=lawSt(getOrdName(l));return s.lb===dashFilter.status||(dashFilter.status==='개정'&&s.lb==='전부개정');});
+    const rest=laws.slice(3);
+    const html=rest.length
+      ?rest.map(l=>{
+          const id=gt(l,'법령일련번호')||gt(l,'자치법규일련번호');
+          const nm=getOrdName(l); const rgn=gt(l,'자치단체명');
+          const date=fmt(gt(l,'공포일자')); const da=dAgo(gt(l,'공포일자'));
+          return `<div class="cat-item">
+            <div class="cat-item-name" onclick="viewLaw('${id}','ordin','${esc(nm)}')">${esc(nm)}</div>
+            <div class="cat-item-meta">
+              ${rgn?`<span class="cat-item-rgn">${esc(rgn)}</span>`:''}
+              <span class="cat-item-date">${date}</span>
+              ${da<=14?'<span class="cat-new">N</span>':''}
+            </div>
+          </div>`;
+        }).join('')
+      :'<div style="padding:.6rem;text-align:center;font-size:.72rem;color:#94a3b8;">추가 결과 없음</div>';
+    const div=document.createElement('div');
+    div.className='cat-expanded';
+    div.innerHTML=html;
+    const footer=el.querySelector('.cat-footer');
+    if(footer) el.insertBefore(div,footer); else el.appendChild(div);
+    if(btn){ btn.textContent='▲ 접기'; btn.disabled=false; }
+  }catch(e){
+    if(btn){ btn.textContent='더 보기 →'; btn.disabled=false; }
+  }
+}
+
+/* ── 경기도 분석 탭 토글 ── */
+const _ggTabOpen = { missing:false, obsolete:false, lead:false };
+  function toggleGgTab(tab){
+    _ggTabOpen[tab] = !_ggTabOpen[tab];
+    const panel = document.getElementById(`gg-tab-${tab}-panel`);
+    const btn   = document.getElementById(`gg-tab-btn-${tab}`);
+    if(panel) panel.style.display = _ggTabOpen[tab] ? 'block' : 'none';
+    const arrow = btn?.querySelector('.gg-tab-arrow');
+    if(arrow) arrow.textContent = _ggTabOpen[tab] ? '▲' : '▼';
+    if(btn){
+      btn.style.boxShadow = _ggTabOpen[tab] ? '0 4px 16px rgba(37,99,235,.18)' : '';
+      btn.style.transform  = _ggTabOpen[tab] ? 'translateY(-1px)' : '';
+    }
+  }
+
+/* ── 경기도 미제정 조례 분석 ── */
+let ggMissingLoaded = false;
+let ggMissingOpen   = false;
+
+function toggleGgMissing(){
+  ggMissingOpen = !ggMissingOpen;
+  const panel = document.getElementById('gg-missing-panel');
+  const arrow = document.getElementById('gg-missing-arrow');
+  panel.style.display = ggMissingOpen ? 'block' : 'none';
+  arrow.style.transform = ggMissingOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+  // 패널 열릴 때 자동 분석 시작
+  if(ggMissingOpen && !ggMissingLoaded){ ggMissingLoaded=true; runGgMissing(); }
+}
+
+// 캐시된 분석 결과를 화면에 표시
+function showCachedResult(){
+  try{
+    const raw = localStorage.getItem('ggAnalysisCache_v2');
+    if(!raw) return false;
+    const cache = JSON.parse(raw);
+    const ageMin = Math.round((Date.now()-cache.ts)/60000);
+    const ageTxt = ageMin < 60 ? `${ageMin}분 전` : `${Math.round(ageMin/60)}시간 전`;
+    // 데이터 복원 후 렌더링
+    renderGgResults(cache.missing, cache.obsolete, cache.lead,
+      `⚡ 캐시된 분석 결과 (${ageTxt} 기준) — 재분석하려면 배너를 다시 클릭하세요.`);
+    return true;
+  }catch(e){ return false; }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ■ STABLE ZONE E — runGgMissing 전체 분석 흐름 (Phase 1 / Phase 2)
+//
+//   Phase 1: 경기도 조례 전수집 (KW_LIST 전체 × 경기도 키워드)
+//     · seenGg = 카테고리별 독립 Set (ZONE C 참고)
+//     · 결과: ggResultsAll[i] = 카테고리 i의 경기도 조례 배열
+//
+//   Phase 2: 카테고리별 타 지자체 비교 → ①②③ 분류
+//     [A] 16개 광역시도 × 대표키워드  → cmpExist (전체), cmpPrimary (광역직속만)
+//     [B] 동의어 키워드 × 전국         → cmpExist 보완
+//     [C] 최근 4년 날짜필터 × 전국     → cmpRecent (② 검토 판단용)
+//
+//     ① 미제정: cmpExist 조례 중 GG 유사명 없는 것
+//     ② 검토:   cmpRecent 조례 중 GG 유사명 있는 것 (타 지자체 최근 변경 → GG 검토)
+//     ③ 선도:   ggLaws 조례 중 cmpExist 유사명 없는 것
+//
+//   [변경 시 주의]
+//     · Phase 1-2 실행 순서 변경 금지 (Phase 2가 ggResultsAll에 의존)
+//     · ①②③ 판단 로직은 getSimNorm + SIM_TH 기반 — ZONE D 참고
+//     · CMP_REGIONS 목록 변경 시 hasSubUnit·isRegion 동작도 함께 검증 필요
+// ════════════════════════════════════════════════════════════════════════
+async function runGgMissing(){
+  if(_ggRunning){ alert('분석이 이미 진행 중입니다. 완료 후 다시 시도하세요.'); return; }
+  _ggRunning = true;
+  try{
+  const { fs, ts } = getDR(48); // 최근 4년
+  const progress = document.getElementById('gg-missing-progress');
+  const results  = document.getElementById('gg-missing-results');
+  progress.style.display = 'block';
+
+  // 비교 대상 — 경기도 제외 16개 광역지자체
+  const CMP_REGIONS = [
+    '서울특별시','부산광역시','대구광역시','인천광역시','광주광역시',
+    '대전광역시','울산광역시','세종특별자치시',
+    '강원특별자치도','충청북도','충청남도','전북특별자치도','전라남도',
+    '경상북도','경상남도','제주특별자치도'
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
+  // ■ STABLE ZONE A — 광역/기초 구분 필터 (hasSubUnit / isRegion / isGG)
+  //   [변경 금지] 아래 로직을 바꾸면 남구·북구 등 기초 조례가 광역으로 오인됨
+  //
+  //   핵심 규칙:
+  //     구/군/읍/면/동 → 글자 수 무관하게 제외 (남구·북구 2글자도 반드시 제외)
+  //     시              → 3글자 이상만 제외  ("도시" 같은 일반명사 오인 방지)
+  //                       ※ length >= 3 조건을 제거하면 "도시" 단어가 시 지명으로 오인됨
+  //                       ※ length >= 4 등으로 높이면 남구·수원시 등 2~3글자 시·구가 통과됨
+  // ════════════════════════════════════════════════════════════════════
+  const hasSubUnit = (nm, prefix) => {
+    const after = nm.slice(prefix.length).trim();
+    const firstToken = after.split(/[\s·\-]/)[0] || '';
+    if(!firstToken) return false;
+    if(/[구군읍면동]$/.test(firstToken)) return true;          // 남구·북구·강남구·양평군 모두 제외
+    if(/시$/.test(firstToken)) return firstToken.length >= 3;  // 도시(2자) 제외, 수원시(3자) 제외
+    return false;
+  };
+  const isRegion = (lawNode, regionName) => {
+    const nm = getOrdName(lawNode);
+    if(!nm.startsWith(regionName)) return false;
+    return !hasSubUnit(nm, regionName); // 하위 단위(시·군·구) 조례 제외
+  };
+  const isGG = (lawNode) => {
+    const nm = getOrdName(lawNode);
+    if(!nm.startsWith('경기도')) return false;
+    return !hasSubUnit(nm, '경기도'); // 경기도 시·군 조례 제외
+  };
+  const isCmpRegion = (lawNode) => CMP_REGIONS.some(r => isRegion(lawNode, r));
+
+  // ════════════════════════════════════════════════════════════════════
+  // ■ STABLE ZONE B — 조례명 정규화 함수 (normOrdName)
+  //   [변경 금지] 이 함수를 바꾸면 "경기도 가족돌봄 아동·청년 지원 조례" 등
+  //   동의어 조례를 미제정으로 오판하는 버그가 재발함
+  //
+  //   처리 순서:
+  //     1. 광역 접두사 제거 ("경기도", "인천광역시" 등)
+  //     1b. 기초 지자체명 추가 제거 ("남구 ", "수원시 " 등)
+  //     2. 공백·중점·하이픈 제거
+  //     3. 동의어 통일 (청소년↔아동↔청년 계열)
+  //     4. 조례 제목 말미 정규화 ("에관한조례" → "조례")
+  //
+  //   ※ 동의어 규칙 추가 시: 기존 규칙 아래에 append만 할 것 (순서 변경 금지)
+  //   ※ _RGN_PFX 목록은 도 명칭 변경 시에만 수정 (예: 강원도→강원특별자치도 이미 포함)
+  // ════════════════════════════════════════════════════════════════════
+  const _RGN_PFX = ['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시',
+    '대전광역시','울산광역시','세종특별자치시','경기도','강원특별자치도','강원도',
+    '충청북도','충청남도','전북특별자치도','전라북도','전라남도','경상북도','경상남도','제주특별자치도'];
+
+  const normOrdName = nm => {
+    if(!nm) return '';
+    // 1. 광역지자체명 접두사 제거
+    for(const p of _RGN_PFX){
+      if(nm.startsWith(p)){
+        nm = nm.slice(p.length).trim();
+        // 1b. ★ 기초지자체명(남구·북구·수원시·양평군 등)도 추가 제거
+        //     패턴: 한글 1~6자 + [시/군/구/읍/면/동] + 공백
+        const subM = nm.match(/^[가-힣]{1,6}[시군구읍면동][\s·]/);
+        if(subM) nm = nm.slice(subM[0].length).trim();
+        break;
+      }
+    }
+    // 2. 공백·중점·하이픈 제거
+    nm = nm.replace(/[\s·\-]/g,'');
+    // 3. 동의어 통일 (청소년/아동 복합 표현)
+    //    "아동·청년" → 공백제거 → "아동청년" → "청년" 으로 통일
+    nm = nm.replace(/청소년청년|청년청소년|아동청년|청년아동|아동청소년|청소년아동/g,'청년');
+    //    단독 "청소년" → "청년" (가족돌봄청소년 등 맥락에서 동의어)
+    nm = nm.replace(/가족돌봄청소년|가족돌봄아동/g,'가족돌봄청년');
+    nm = nm.replace(/위기청소년|위기아동/g,'위기청년');
+    // 4. 조례 제목 말미 정규화 ("에관한조례" → "조례")
+    nm = nm.replace(/에관한조례|을위한조례|에대한조례/g,'조례');
+    nm = nm.replace(/에관한|을위한|에대한/g,'');
+    return nm;
+  };
+
+  // label: 화면 표시용, kws: 실제 API 검색어 (모두 OR 방식으로 검색)
+  const KW_LIST = [
+    { cat:'청년·교육',  label:'청년',
+      kws:['청년','청장년','청년1인가구','쉬었다청년','청년도전','청년내일'] },
+    { cat:'복지·보건',  label:'1인가구',
+      kws:['1인가구','일인가구','독거','고독사'] },
+    { cat:'복지·보건',  label:'돌봄',
+      kws:['돌봄','가족돌봄청소년','가족돌봄아동','아이돌봄','노인돌봄','장기요양','재가복지','사회서비스'] },
+    { cat:'복지·보건',  label:'장애인',
+      kws:['장애인','장애','발달장애','중증장애'] },
+    { cat:'복지·보건',  label:'노인',
+      kws:['노인','어르신','고령자','고령화','노인복지'] },
+    { cat:'복지·보건',  label:'저출생',
+      kws:['저출생','저출산','출산','양육','육아','다자녀'] },
+    { cat:'환경·기후',  label:'기후·탄소',
+      kws:['기후변화','탄소중립','온실가스','탄소','기후위기','탄소흡수'] },
+    { cat:'환경·기후',  label:'에너지',
+      kws:['에너지','신재생에너지','태양광','수소에너지','에너지전환'] },
+    { cat:'생활·안전',  label:'반려동물',
+      kws:['반려동물','반려견','반려묘','반려식물','동반여행','동반관광','동물복지','유기동물'] },
+    { cat:'안전·재난',  label:'재난·안전',
+      kws:['재난','안전','재해','재난관리','안전관리','위기관리'] },
+    { cat:'경제·산업',  label:'스타트업·창업',
+      kws:['스타트업','창업','벤처','소상공인','자영업','중소기업'] },
+    { cat:'경제·산업',  label:'인공지능·디지털',
+      kws:['인공지능','AI','디지털','빅데이터','스마트','메타버스'] },
+    { cat:'도시·주거',  label:'빈집·주거',
+      kws:['빈집','주거','빈건물','주택','공공임대','청년주택'] },
+    { cat:'문화·관광',  label:'문화관광',
+      kws:['문화관광','관광','문화예술','문화재','역사','축제'] },
+    { cat:'농업·농촌',  label:'귀농·귀촌',
+      kws:['귀농','귀촌','귀농귀촌','농촌','농업','청년농'] },
+    { cat:'복지·보건',  label:'자원봉사',
+      kws:['자원봉사','봉사활동','나눔','사회공헌'] },
+  ];
+
+  const stepsEl  = document.getElementById('gg-missing-steps');
+  const statusEl = document.getElementById('gg-missing-status');
+  stepsEl.innerHTML = '';
+  const missing  = [];
+  const obsolete = [];
+  const lead     = [];
+
+    // ════════════════════════════════════════════════════════
+  // Phase 1: 경기도 조례 전수집 (프록시 여유 시 선점)
+  // ════════════════════════════════════════════════════════
+  statusEl.textContent = '경기도 조례 사전 수집 중…';
+  const ggResultsAll = [];   // index → ggLaws[]
+  // ════════════════════════════════════════════════════════════════════
+  // ■ STABLE ZONE C — Phase 1 seenGg 카테고리별 독립 Set
+  //   [변경 금지] seenGg를 루프 밖 전역으로 올리면 "경기도 가족돌봄 아동·청년"처럼
+  //   여러 카테고리에 걸쳐 있는 조례가 첫 카테고리에서만 수집되고
+  //   나머지 카테고리에서 경기도 조례 없음 → 미제정 오판 버그가 재발함
+  //   → seenGg는 반드시 for 루프 안에서 new Set() 선언 (카테고리별 독립)
+  // ════════════════════════════════════════════════════════════════════
+
+  for(let i=0; i<KW_LIST.length; i++){
+    const {kws, label} = KW_LIST[i];
+    const ggLawsI = [];
+    const seenGg  = new Set();  // ★ 카테고리별 독립 중복제거 Set (루프 밖으로 이동 금지)
+    for(const kw of kws){
+      try{
+        const xml = await qFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent('경기도 '+kw)}&display=100`);
+        let hits = Array.from(xml.querySelectorAll('law')).filter(l=>isGG(l));
+        // 0건이면 1회 재시도
+        if(hits.length===0){
+          await dl(600);
+          try{
+            const xml2 = await qFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent('경기도 '+kw)}&display=100`);
+            hits = Array.from(xml2.querySelectorAll('law')).filter(l=>isGG(l));
+          }catch(e2){}
+        }
+        hits.forEach(l=>{
+          const key = getOrdName(l).replace(/\s/g,'').slice(0,12);
+          if(!seenGg.has(key)){ seenGg.add(key); ggLawsI.push(l); }
+        });
+      }catch(e){}
+      await dl(280);
+    }
+    ggResultsAll.push(ggLawsI);
+    statusEl.textContent = `경기도 사전 수집 (${i+1}/${KW_LIST.length}) — 「${label}」 ${ggLawsI.length}건`;
+  }
+
+  // ════════════════════════════════════════════════════════
+  // Phase 2: 카테고리별 타 지자체 비교 + ①②③ 분류
+  // ════════════════════════════════════════════════════════
+  for(let i=0; i<KW_LIST.length; i++){
+    const {cat, label, kws} = KW_LIST[i];
+    statusEl.textContent = `「${label}」 타 지자체 비교 중… (${i+1}/${KW_LIST.length})`;
+
+    const stepEl = document.createElement('div');
+    stepEl.className = 'step-item';
+    stepEl.innerHTML = `<div class="loader" style="width:14px;height:14px;border-width:2px;"></div><span style="font-size:.78rem;margin-left:.5rem;color:#64748b;">「${label}」 조회 중…</span>`;
+    stepsEl.appendChild(stepEl);
+
+    const seenCmp    = new Set();
+    const seenCmpPri = new Set();
+    const cmpExist   = [];
+    const cmpRecent  = [];
+    const cmpPrimary = [];
+    const ggLaws     = ggResultsAll[i] || [];
+    const ggHas      = ggLaws.length > 0;
+
+    // ════════════════════════════════════════════════════════════════════
+    // ■ STABLE ZONE D — 유사도 함수 (getSim / getSimNorm / SIM_TH)
+    //   [변경 금지] 아래 3가지를 동시에 유지해야 정확도가 유지됨:
+    //     · getSim       : Dice bigram 유사도 (0.0~1.0)
+    //     · getSimNorm   : normOrdName 정규화 후 getSim — 지역명·동의어 차이 무시
+    //     · SIM_TH=0.45  : 정규화 적용 기준에서 보정된 임계값
+    //                      0.45 미만으로 낮추면 연관성 없는 조례끼리 유사 판정 급증
+    //                      0.55 이상으로 높이면 "가족돌봄청소년↔가족돌봄청년" 등
+    //                      명백한 동의어 조례가 미제정으로 오판됨
+    //   ※ 임계값 조정이 필요하면 반드시 테스트 케이스 확인 후 0.45±0.05 범위 내에서만 변경
+    // ════════════════════════════════════════════════════════════════════
+    const getSim = (a, b) => {
+      if(!a||!b) return 0; if(a===b) return 1.0;
+      const bg = s => { const r=[]; for(let j=0;j<s.length-1;j++) r.push(s.slice(j,j+2)); return r; };
+      const b1=bg(a), b2=bg(b); if(!b1.length||!b2.length) return 0;
+      const copy=[...b2]; let m=0;
+      b1.forEach(x=>{const k=copy.indexOf(x);if(k!==-1){m++;copy.splice(k,1);}});
+      return(2*m)/(b1.length+b2.length);
+    };
+    // 정규화 유사도: 지역명 제거 + 동의어 통일 후 비교 (청소년↔아동 오판 방지)
+    const getSimNorm = (a, b) => getSim(normOrdName(a), normOrdName(b));
+    const SIM_TH = 0.45;  // 정규화 적용 기준값 — 변경 시 위 주석 필독
+    const cmpHasEquiv = (cmpList) =>
+      ggLaws.some(gl => cmpList.some(cl => getSimNorm(getOrdName(gl), getOrdName(cl)) >= SIM_TH));
+
+    const primaryKw = kws[0];
+    const {fs, ts} = getDR(48);
+
+    // [A] 16개 광역시도 × 대표키워드
+    for(const rg of CMP_REGIONS){
+      try{
+        const xmlRg = await qFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent(rg+' '+primaryKw)}&display=100`);
+        const lawsRg = Array.from(xmlRg.querySelectorAll('law'));
+        let addedRg = 0;
+        lawsRg.forEach(l=>{
+          if(!isRegion(l,rg)) return;
+          const nm  = getOrdName(l);
+          const key = nm.replace(/\s/g,'').slice(0,12);
+          if(!seenCmp.has(key)){ seenCmp.add(key); cmpExist.push(l); cmpPrimary.push(l); addedRg++; }
+        });
+        if(lawsRg.length===0||addedRg>0) console.log('[A]',rg,primaryKw,'→',lawsRg.length,'건 중',addedRg,'건 광역');
+      }catch(e){ console.warn('[A] 실패',rg,primaryKw,e.message); }
+      await dl(250);
+    }
+
+    // [B] 나머지 동의어 × 전국
+    for(const kw of kws.slice(1)){
+      try{
+        const xmlAll = await qFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent(kw)}&display=100`);
+        Array.from(xmlAll.querySelectorAll('law')).forEach(l=>{
+          const rg = CMP_REGIONS.find(r=>isRegion(l,r));
+          if(rg){
+            const nm  = getOrdName(l);
+            const key = nm.replace(/\s/g,'').slice(0,12);
+            if(!seenCmp.has(key)){ seenCmp.add(key); cmpExist.push(l); }
+          }
+        });
+      }catch(e){}
+      await dl(280);
+    }
+
+    // [C] 최근 4년 날짜필터 × 전국 (②용)
+    for(const kw of kws){
+      try{
+        const xmlRec = await qFetch(`http://www.law.go.kr/DRF/lawSearch.do?OC=${OC}&target=ordin&type=XML&query=${encodeURIComponent(kw)}&display=100&efYdFr=${fs}&efYdTo=${ts}`);
+        Array.from(xmlRec.querySelectorAll('law')).forEach(l=>{
+          const rg = CMP_REGIONS.find(r=>isRegion(l,r));
+          if(rg){
+            const nm  = getOrdName(l);
+            const key = nm.replace(/\s/g,'').slice(0,12)+'R';
+            if(!seenCmp.has(key)){ seenCmp.add(key); cmpRecent.push(l); }
+          }
+        });
+      }catch(e){}
+      await dl(280);
+    }
+
+    // ① 타 지자체 조례 개별 탐색 → 경기도에 유사명 없으면 미제정
+    //    ggHas 조건 없음: 경기도에 다른 키워드 결과가 있어도,
+    //    이 특정 조례와 유사한 이름이 없으면 미제정으로 독립 판단
+    {
+      const seenMiss = new Set();
+      cmpExist.forEach(cmpLaw => {
+        const rg = CMP_REGIONS.find(r=>isRegion(cmpLaw,r))||'';
+        if(!rg || seenMiss.has(rg)) return;
+        const cmpNm = getOrdName(cmpLaw);
+        // 경기도 조례 중 이 조례와 유사명(45%+)이 있는지 개별 확인 (정규화 유사도 사용)
+        const ggHasThisType = ggLaws.some(gl =>
+          getSimNorm(getOrdName(gl), cmpNm) >= SIM_TH
+        );
+        if(!ggHasThisType){
+          seenMiss.add(rg);
+          missing.push({ cat, label, region:rg, name:cmpNm,
+            date:fmt(gt(cmpLaw,'공포일자')), st:'미제정',
+            id:gt(cmpLaw,'법령일련번호')||gt(cmpLaw,'자치법규일련번호') });
+        }
+      });
+      if(seenMiss.size > 0)
+        stepEl.innerHTML=`<span>🔴</span><span style="font-size:.78rem;margin-left:.5rem;color:#b91c1c;">「${label}」 ${seenMiss.size}개 시·도 현존 — <b>경기도 미제정</b></span>`;
+    }
+
+    // ② 최근 4년 타 지자체 변경 → 경기도에 유사 조례가 있으면 검토 필요
+    //    ggHas 대신 빅그램으로 개별 조례 유사명 확인 (①③과 동일 방식)
+    const changed = [];
+    if(cmpRecent.length > 0){
+      cmpRecent.forEach(l=>{
+        const rg  = CMP_REGIONS.find(r=>isRegion(l,r))||'';
+        if(!rg) return;
+        const nm  = getOrdName(l);
+        const lb  = lawSt(nm).lb||'변경';
+        // 경기도 조례 중 유사명(정규화 45%+) 찾기
+        const ggMatch = ggLaws.find(gl => getSimNorm(getOrdName(gl), nm) >= SIM_TH) || ggLaws[0];
+        if(ggMatch){  // 경기도에 유사 조례가 있을 때만 검토 대상
+          obsolete.push({
+            cat, label, region:rg, name:nm, type:lb,
+            date: fmt(gt(l,'공포일자')),
+            ggName: getOrdName(ggMatch),
+            ggId:   gt(ggMatch,'법령일련번호')||gt(ggMatch,'자치법규일련번호'),
+          });
+          changed.push(l);
+        }
+      });
+      if(changed.length>0)
+        stepEl.innerHTML=`<span>🟡</span><span style="font-size:.78rem;margin-left:.5rem;color:#a16207;">「${label}」 타 지자체 ${changed.length}건 최근 변경 — <b>경기도 검토 필요</b></span>`;
+    }
+
+    // ③ 경기도 조례 개별 탐색 → 타 지자체에 유사명 없으면 선도
+    //    cmpPrimary/ggHas 조건 없음: ①과 완전 독립 탐색
+    {
+      const leadAdded = [];
+      const seenLead  = new Set();
+      ggLaws.forEach(ggLaw => {
+        const ggNm  = getOrdName(ggLaw);
+        const key   = ggNm.replace(/\s/g,'').slice(0,14);
+        if(seenLead.has(key)) return;
+        seenLead.add(key);
+        // 타 지자체 조례 중 이 조례와 유사명(정규화 45%+)이 있는지 개별 확인
+        const cmpHasThisType = cmpExist.some(cl =>
+          getSimNorm(getOrdName(cl), ggNm) >= SIM_TH
+        );
+        if(!cmpHasThisType){
+          leadAdded.push(ggLaw);
+          lead.push({ cat, label, name:ggNm,
+            date: fmt(gt(ggLaw,'공포일자')),
+            st:   lawSt(ggNm).lb||'현행',
+            id:   gt(ggLaw,'법령일련번호')||gt(ggLaw,'자치법규일련번호') });
+        }
+      });
+      if(leadAdded.length > 0)
+        stepEl.innerHTML=`<span>🥇</span><span style="font-size:.78rem;margin-left:.5rem;color:#15803d;">「${label}」 — <b>경기도 선도</b> (${leadAdded.length}건)</span>`;
+    }
+
+    if(cmpExist.length>0 && ggHas && !changed.length && cmpPrimary.length>0){
+      stepEl.innerHTML=`<span>✅</span><span style="font-size:.78rem;margin-left:.5rem;color:#374151;">「${label}」 — 경기도·타 지자체 모두 현존 (경기도 ${ggLaws.length}건)</span>`;
+    }
+    if(cmpExist.length===0 && !ggHas){
+      stepEl.innerHTML=`<span>⬜</span><span style="font-size:.78rem;margin-left:.5rem;color:#94a3b8;">「${label}」 — 해당 조례 없음</span>`;
+    }
+
+    stepsEl.scrollTop = stepsEl.scrollHeight;
+    await dl(150);
+  }
+
+
+  // 선도 조례 스텝 요약
+  const leadStepEl = document.createElement('div');
+  leadStepEl.className = 'step-item';
+  leadStepEl.innerHTML = `<span>🏁</span><span style="font-size:.78rem;margin-left:.5rem;color:#374151;">분석 완료 — 미제정 <b style="color:#b91c1c;">${missing.length}건</b> / 검토 <b style="color:#a16207;">${obsolete.length}건</b> / 선도 <b style="color:#15803d;">${lead.length}건</b></span>`;
+  stepsEl.appendChild(leadStepEl);
+
+  // ── 결과 캐싱 (localStorage) ──
+  try{
+    const cachePayload = JSON.stringify({
+      missing, obsolete, lead,
+      ts: Date.now(),
+      label: `미제정 ${missing.length}건 / 검토 ${obsolete.length}건 / 선도 ${lead.length}건`
+    });
+    localStorage.setItem('ggAnalysisCache_v2', cachePayload);
+    console.log('[캐시 저장] 분석 결과 localStorage 저장 완료');
+  }catch(cacheErr){ console.warn('[캐시 저장 실패]', cacheErr); }
+
+  // ── 결과 표시 ──
+  progress.style.display = 'none';
+
+  const badge = document.getElementById('gg-missing-badge');
+  badge.textContent = `미제정 ${missing.length}건 / 검토 ${obsolete.length}건 / 선도 ${lead.length}건`;
+  badge.style.display = 'inline';
+
+  document.getElementById('gg-missing-count').textContent = `${missing.length}건`;
+  document.getElementById('gg-missing-desc').textContent =
+    `16개 광역지자체에 현존하는 조례 중, 경기도에 동일·유사한 조례가 없는 항목입니다. 해당 조례의 필요성 및 경기도 적용 가능성을 검토하시기 바랍니다. (분석 기준일: ${fmt(ts)} | 확인 건수: ${missing.length}건)`;
+
+  // ① 미제정 테이블
+  const tbody = document.getElementById('gg-missing-tbody');
+  tbody.innerHTML = '';
+  if(!missing.length){
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#64748b;padding:1.5rem;">검색 범위 내 미제정 조례가 발견되지 않았습니다.</td></tr>`;
+  } else {
+    missing.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      tr.style.background = i%2===0?'':'#f8fafc';
+      tr.innerHTML=`
+        <td><span style="background:#eff6ff;color:#1B4F9E;border-radius:4px;padding:.15rem .45rem;font-size:.7rem;font-weight:700;">${esc(r.cat)}</span></td>
+        <td style="font-size:.78rem;color:#374151;">${esc(r.region)}</td>
+        <td style="font-size:.78rem;font-weight:600;color:#1e293b;cursor:pointer;" onclick="viewLaw('${r.id}','ordin','${esc(r.name)}')">${esc(r.name)}</td>
+        <td style="text-align:center;font-size:.75rem;color:#64748b;">${r.date}</td>
+        <td style="text-align:center;"><span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:.2rem .5rem;font-size:.7rem;font-weight:700;">미제정</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ③ 선도 조례 테이블
+  document.getElementById('gg-lead-count').textContent = `${lead.length}건`;
+  const ltbody = document.getElementById('gg-lead-tbody');
+  ltbody.innerHTML = '';
+  if(!lead.length){
+    ltbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#64748b;padding:1.5rem;">해당 없음 — 경기도 단독 선도 조례가 발견되지 않았습니다.</td></tr>`;
+  } else {
+    lead.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      tr.style.background = i%2===0?'':'#f8fafc';
+      const stBadge = r.st==='제정'
+        ?`<span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:.2rem .4rem;font-size:.7rem;font-weight:700;">제정</span>`
+        :`<span style="background:#eff6ff;color:#1d4ed8;border-radius:4px;padding:.2rem .4rem;font-size:.7rem;font-weight:700;">${esc(r.st)}</span>`;
+      tr.innerHTML=`
+        <td><span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:.15rem .45rem;font-size:.7rem;font-weight:700;">${esc(r.cat)}</span></td>
+        <td style="font-size:.78rem;font-weight:600;color:#1e293b;cursor:pointer;" onclick="viewLaw('${r.id}','ordin','${esc(r.name)}')">${esc(r.name)}</td>
+        <td style="text-align:center;font-size:.75rem;color:#64748b;">${r.date}</td>
+        <td style="text-align:center;">${stBadge}</td>
+        <td style="text-align:center;"><span style="background:#fef9c3;color:#a16207;border-radius:4px;padding:.2rem .5rem;font-size:.7rem;font-weight:700;">🥇 경기도 선도</span></td>`;
+      ltbody.appendChild(tr);
+    });
+  }
+
+  // ② 개정/폐지 테이블 (6컬럼)
+  document.getElementById('gg-obsolete-count').textContent = `${obsolete.length}건`;
+  const otbody = document.getElementById('gg-obsolete-tbody');
+  otbody.innerHTML = '';
+  if(!obsolete.length){
+    otbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#64748b;padding:1.5rem;">해당 없음 — 타 시·도 최근 변경 조례 중 경기도 현존 조례가 발견되지 않았습니다.</td></tr>`;
+  } else {
+    obsolete.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      tr.style.background = i%2===0?'':'#f8fafc';
+      const prioBadge = r.priority==='우선'
+        ?`<span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:.2rem .5rem;font-size:.7rem;font-weight:700;">우선 검토</span>`
+        :`<span style="background:#fef9c3;color:#a16207;border-radius:4px;padding:.2rem .5rem;font-size:.7rem;font-weight:700;">일반 검토</span>`;
+      tr.innerHTML=`
+        <td><span style="background:#eff6ff;color:#1B4F9E;border-radius:4px;padding:.15rem .45rem;font-size:.7rem;font-weight:700;">${esc(r.cat)}</span></td>
+        <td style="font-size:.78rem;color:#374151;">${esc(r.region)}</td>
+        <td style="font-size:.78rem;color:#1e293b;">${esc(r.name)}</td>
+        <td style="text-align:center;font-size:.75rem;color:#64748b;">${r.date}</td>
+        <td style="font-size:.78rem;font-weight:600;color:#1e293b;cursor:pointer;" onclick="viewLaw('${r.ggId}','ordin','${esc(r.ggName)}')">${esc(r.ggName)}</td>
+        <td style="text-align:center;">${prioBadge}</td>`;
+      otbody.appendChild(tr);
+    });
+  }
+
+  // 결과 있는 패널 자동 열기
+  if(missing.length  > 0 && !_ggTabOpen.missing)  toggleGgTab('missing');
+  if(obsolete.length > 0 && !_ggTabOpen.obsolete) toggleGgTab('obsolete');
+  if(lead.length     > 0 && !_ggTabOpen.lead)     toggleGgTab('lead');
+    }catch(err){
+    const p = document.getElementById('gg-missing-progress');
+    if(p) p.style.display='none';
+    ['gg-missing-tbody','gg-obsolete-tbody','gg-lead-tbody'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.innerHTML=`<tr><td colspan="7" style="text-align:center;color:#ef4444;padding:1.5rem;font-size:.8rem;">⚠️ 분석 오류: ${err.message}</td></tr>`;
+    });
+    console.error('runGgMissing 오류:', err);
+  } finally {
+    _ggRunning = false;
+    // 분석 완료 후 현황판 자동 갱신
+    setTimeout(()=>{ if(typeof applyDashFilter==='function') applyDashFilter(); }, 600);
+  }
+}
+
+function exportGgMissingWord(){
+  const rows = Array.from(document.querySelectorAll('#gg-missing-tbody tr'));
+  const tbl = rows.map(r=>{
+    const cells = Array.from(r.querySelectorAll('td')).map(td=>td.textContent.trim());
+    return `<tr>${cells.map(c=>`<td style="border:1px solid #ddd;padding:4pt 6pt;">${c}</td>`).join('')}</tr>`;
+  }).join('');
+  const html=`<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8">
+    <style>body{font-family:'맑은 고딕',sans-serif;}table{border-collapse:collapse;width:100%;}th{background:#1B4F9E;color:white;padding:4pt 6pt;border:1px solid #ddd;}</style></head>
+    <body><h2>경기도 미제정 조례 목록</h2><p>${document.getElementById('gg-missing-desc').textContent}</p>
+    <table><thead><tr><th>분야</th><th>시·도</th><th>조례명</th><th>제정일</th><th>경기도 현황</th></tr></thead><tbody>${tbl}</tbody></table>
+    <p style="font-size:8pt;color:#888;">※ API 검색 기반 추정 결과, 최종 판단은 법제 담당 부서 검토 필요</p></body></html>`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword;charset=utf-8'}));
+  a.download=`경기도_미제정조례_${tod()}.doc`; a.click();
+}
+
+
+/* ── 법령 본문 ── */
+
+/* 법제처 API 내부 코드 정제 */
+function cleanLawCode(raw) {
+  let text = raw || '';
+  // 첫 번째 '제N조' 이전의 헤더/코드 블록 전체 제거
+  const start = text.search(/제\d+조/);
+  if (start > 0) text = text.slice(start);
+  // 000100Y목적제1조 → 제1조 (6자리숫자+대문자+한글 코드 제거)
+  text = text.replace(/\d{6}[A-Za-z][가-힣]*/g, '');
+  // 부칙, 별표, 서식 앞 코드 정리
+  text = text.replace(/\d{4,}[A-Za-z][가-힣]*/g, '');
+  // 공백/줄바꿈 정리
+  text = text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  return text;
+}
+
+/* 텍스트 → 조례 HTML 포맷 */
+function formatLawHTML(text) {
+  return text.split(/\n\n+/).map(para => {
+    const p = para.trim();
+    if (!p) return '';
+    // 제N조, 제N조의N, 부칙 등 조문 번호 볼드
+    const hl = p
+      .replace(/(제\d+조(?:의\d+)?(?:\([^)]+\))?)/g, '<b style="color:#1B4F9E;">$1</b>')
+      .replace(/(부칙(?:\([^)]+\))?)/g, '<b style="color:#7c3aed;">$1</b>')
+      // 항 번호 ①②③ 등 강조
+      .replace(/([①②③④⑤⑥⑦⑧⑨⑩])/g, '<b>$1</b>');
+    return `<p style="margin:0 0 .85em 0;text-indent:1em;word-break:keep-all;">${hl}</p>`;
+  }).filter(Boolean).join('');
+}
+
+async function viewLaw(id,target,name){
+  if(!id){ return; }
+  document.getElementById('modalTitle').textContent=name||'법령 본문';
+  document.getElementById('modalContent').innerHTML=
+    '<div style="display:flex;align-items:center;gap:.6rem;color:#64748b;font-size:.82rem;"><div class="loader"></div> 본문 로딩 중...</div>';
+  document.getElementById('lawModal').style.display='flex';
+
+  // 법제처 사이트 직접 링크 (폴백용)
+  const lawSiteUrl = `https://www.law.go.kr/ordinSc.do?tabMenuId=tab18&query=${encodeURIComponent(name||'')}`;
+  const fallbackHTML = (msg) => `
+    <div style="text-align:center;padding:2rem 1rem;">
+      <div style="font-size:2.2rem;margin-bottom:.75rem;">🔍</div>
+      <p style="font-weight:700;color:#1e293b;font-size:.88rem;margin-bottom:.4rem;">${msg}</p>
+      <p style="font-size:.75rem;color:#64748b;margin-bottom:1.25rem;line-height:1.6;">
+        API를 통해 원문을 직접 제공하지 않는 조례입니다.<br>
+        법제처 자치법규 검색에서 원문을 확인하세요.
+      </p>
+      <a href="${lawSiteUrl}" target="_blank" rel="noopener"
+         style="display:inline-block;background:#1B4F9E;color:#fff;text-decoration:none;
+                border-radius:.6rem;padding:.55rem 1.4rem;font-size:.82rem;font-weight:600;margin-bottom:.6rem;">
+        🔗 법제처에서 원문 보기
+      </a>
+    </div>`;
+
+  try{
+    const xml=await fetchXML(`http://www.law.go.kr/DRF/lawService.do?OC=${OC}&target=${target}&type=XML&ID=${id}`);
+    const docText = xml.documentElement.textContent || '';
+
+    // ── API 오류 감지 ──
+    // "일치하는 자치법규가 없습니다" 등 오류 메시지 포함 시 폴백 표시
+    if(docText.includes('일치하는') || docText.includes('없습니다') ||
+       docText.includes('오류') || docText.trim().length < 50){
+      document.getElementById('modalContent').innerHTML = fallbackHTML('API 원문 조회 불가');
+      return;
+    }
+
+    const arts=xml.querySelectorAll('조문내용');
+    let raw='';
+    if(arts.length){
+      arts.forEach(a=>{ raw+=a.textContent.trim()+'\n\n'; });
+    } else {
+      raw=docText.replace(/\t/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    }
+
+    // 내용이 너무 짧거나 오류성 텍스트면 폴백
+    const cleaned = cleanLawCode(raw);
+    if(!cleaned || cleaned.length < 30){
+      document.getElementById('modalContent').innerHTML = fallbackHTML('원문 내용 없음');
+      return;
+    }
+
+    const html = formatLawHTML(cleaned);
+    document.getElementById('modalContent').innerHTML = html || fallbackHTML('본문 파싱 실패');
+  }catch(e){
+    document.getElementById('modalContent').innerHTML=
+      `<div style="text-align:center;padding:2rem;color:#94a3b8;">
+        <div style="font-size:2rem;margin-bottom:.5rem;">📡</div>
+        <div style="font-weight:600;color:#374151;margin-bottom:.4rem;">본문 조회 실패</div>
+        <div style="font-size:.75rem;color:#64748b;margin-bottom:1rem;">CORS 차단 또는 네트워크 오류 — Chrome CORS 확장 프로그램 활성화 후 재시도하세요.</div>
+        <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;">
+          <button onclick="viewLaw('${id}','${target}','${(name||'').replace(/'/g,"\\'")}') "
+            style="background:#1B4F9E;color:#fff;border:none;border-radius:.5rem;padding:.4rem 1rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;">↻ 재시도</button>
+          <a href="${lawSiteUrl}" target="_blank" rel="noopener"
+            style="background:#fff;color:#1B4F9E;border:1.5px solid #1B4F9E;border-radius:.5rem;padding:.4rem 1rem;font-size:.78rem;font-weight:600;text-decoration:none;">🔗 법제처에서 보기</a>
+        </div>
+      </div>`;
+  }
+}
+function closeModal(){
+  document.getElementById('lawModal').style.display='none';
+}
+document.getElementById('lawModal').addEventListener('click',e=>{
+  if(e.target===e.currentTarget) closeModal();
+});
+
+
+
+/* ── 내보내기 ── */
+async function exportPDF(elId,filename,landscape=false){
+  const el=document.getElementById(elId); if(!el)return;
+  const canvas=await html2canvas(el,{scale:1.5,useCORS:true,backgroundColor:'#fff'});
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:landscape?'l':'p',unit:'mm',format:'a4'});
+  const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+  const imgH=(canvas.height*pw)/canvas.width,img=canvas.toDataURL('image/png');
+  let y=0;
+  while(y<imgH){pdf.addImage(img,'PNG',0,-y,pw,imgH);y+=ph;if(y<imgH)pdf.addPage();}
+  pdf.save(filename);
+}
+
+/* ── 페이지 로드 ── */
+window.addEventListener('DOMContentLoaded',()=>{
+  // 패널 표시 (데이터는 조회 버튼 클릭 시 로드)
+  document.getElementById('detail-panel').classList.remove('hidden');
+  document.getElementById('dash-section').classList.remove('hidden');
+});
+</script>
+</body>
+</html>
