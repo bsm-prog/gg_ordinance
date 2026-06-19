@@ -542,11 +542,11 @@ const OC = 'bitsam24';
 
 /* ── 멀티 프록시 폴백 ── */
 const PROXIES = [
-  u => u.replace('http://','https://'),
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://proxy.cors.sh/${u}`,
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
   u => `https://thingproxy.freeboard.io/fetch/${u}`,
+  u => `https://cors.eu.org/${u}`,
 ];
 let activeProxy = 0;
 
@@ -593,7 +593,7 @@ async function fetchXML(apiUrl) {
   // 모든 프록시를 동시에 시도 — 가장 먼저 성공한 응답 사용 (Promise.any)
   const tryProxy = async (proxyFn, extraHeaders = {}) => {
     const url = proxyFn(apiUrl);
-    const res = await fetch(url, {signal: AbortSignal.timeout(12000), headers: extraHeaders});
+    const res = await fetch(url, {signal: AbortSignal.timeout(18000), headers: extraHeaders});
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const txt = await res.text();
     if (!txt || txt.length < 30 || txt.trim().startsWith('<!')) throw new Error('빈 응답');
